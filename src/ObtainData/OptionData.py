@@ -3,7 +3,7 @@ Author: LinXuan
 Date: 2022-01-04 01:22:05
 Description: 执行爬取数据的逻辑
 LastEditors: LinXuan
-LastEditTime: 2022-01-04 16:48:03
+LastEditTime: 2022-01-04 17:14:44
 FilePath: /opensource-homework/src/ObtainData/OptionData.py
 '''
 import time
@@ -15,7 +15,7 @@ from Login import login
 from Task import Task
 import pprint
 import csv
-delay = 1  # 切换页面后的延迟，单位s
+delay = 2  # 切换页面后的延迟，单位s
 
 
 def get_course_list(web: Chrome) -> List[WebElement]:
@@ -63,20 +63,20 @@ def get_course_data(web: Chrome, course: WebElement) -> List[Task]:
 
 def get_task_data(task: WebElement, course_name) -> Task:
     task_data = Task(course_name)
-    start = task.find_elements_by_xpath("div[1]/span")[0].text.split("\n")[1]
-    end = task.find_elements_by_xpath("div[1]/span")[1].text.split("\n")[1]
-    status = task.find_elements_by_xpath("div[1]/span")[2].text.split("\n")[1]
-    score = task.find_element_by_xpath("div[2]/span").text
+    spans = task.find_elements_by_xpath("div/span")
+    start = spans[0].text.split("\n")[1]
+    end = spans[1].text.split("\n")[1]
+    status = spans[2].text.split("\n")[1]
+    score = spans[3].text
     task_data.full(start, end, status, score)
     return task_data
-    pass
 
 
 def obtain_data(user_data, url) -> List[Task]:
     ops = Options()
     ops.add_argument(f'user-data-dir={user_data}')
-    ops.add_argument("--headless")
-    ops.add_argument("--disable-gpu")
+    # ops.add_argument("--headless")
+    # ops.add_argument("--disable-gpu")
     web = Chrome(options=ops)
     # 展开页面
     web.get(url)
