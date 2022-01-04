@@ -1,2 +1,4 @@
 .vscode
 resource/user-data/*
+src/user-data
+src/ObtainData/__pycache__
