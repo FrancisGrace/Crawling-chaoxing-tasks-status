@@ -6,10 +6,14 @@ from datetime import datetime
 
 
 def display_table():
+    """
+    将未提交或可修改的作业以表格形式显示
+    """
     # 创建表格
     table = PrettyTable(['科目', '作业名称', '截止时间', '剩余时间'])
     table.set_style(prettytable.PLAIN_COLUMNS)
-    with open('data.csv', encoding='utf-8') as f:
+    # 读取信息
+    with open('../resource/data.csv', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['status'] != '已完成':
@@ -22,28 +26,46 @@ def display_table():
 
 
 def display_chart():
-    # 图表
+    """
+    将已批改的作业以统计图形式显示
+    """
+    # 设置图表
     plt.rcParams['font.sans-serif'] = ['STZhongSong']  # 用来正常显示中文标签
     # plt.rcParams['font.size'] = '16'
     plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
-    plt.gcf().subplots_adjust(bottom=0.15, wspace=0.5)
-    # TODO 循环遍历有已批作业的科目
-    plt.subplot(2, 2, 1)
-    plt.xlabel('作业名称')
-    plt.ylabel('分数')
+    plt.gcf().subplots_adjust(bottom=0.15, wspace=0.5, hspace=0.5)
+    plt.tight_layout()
+    subjects = []
+    # 读取科目
+    with open('../resource/data.csv', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['score'] != '':
+                try:
+                    subjects.index(row['name'])
+                except ValueError:
+                    subjects.append(row['name'])
+    # 读取各科作业成绩并绘制
+    for i in range(0, len(subjects)):
+        plt.subplot(2, (len(subjects) + 1) // 2, i + 1)
+        plt.ylabel('作业名称')
+        plt.xlabel('分数')
+        hw_subject = subjects[i]
+        hw_list = []
+        hw_score = []
+        with open('../resource/data.csv', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['name'] == subjects[i] and row['score'] != '':
+                    hw_list.append(row['name'])
+                    hw_score.append(float(row['score'][:-1]))
+        plt.title(hw_subject + '历次作业成绩', fontsize='12')
+        plt.barh(range(len(hw_score)), hw_score, align='center', color='steelblue')  # 绘制条形图
+        plt.yticks(range(len(hw_list)), hw_list)  # 设置横轴标签
 
-    # TODO 获取作业成绩
-    hw_subject = '模拟与数字电路'
-    hw_list = ['第一周作业', '第二周作业', '第三周作业', '第四周作业']
-    hw_score = [100, 100, 95, 100]
-    plt.title(hw_subject + '历次作业成绩', fontsize='12')
-    plt.bar(range(4), hw_score, align='center', color='steelblue')  # 绘制条形图
-    plt.xticks(range(4), hw_list, rotation=-30)  # 设置横轴标签
-
-    for x, y in enumerate(hw_score):
-        plt.text(x, y, y, ha='center')  # 在图中标注数字
-    # TODO 循环结束
-
+        for x, y in enumerate(hw_score):
+            plt.text(y, x - 0.2, y, ha='right')  # 在图中标注数字
+    # 显示图表
     plt.show()
 
 
