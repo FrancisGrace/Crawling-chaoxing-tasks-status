@@ -3,9 +3,10 @@ Author: LinXuan
 Date: 2022-01-04 01:22:05
 Description: 执行爬取数据的逻辑
 LastEditors: LinXuan
-LastEditTime: 2022-01-04 17:14:44
+LastEditTime: 2022-01-04 18:38:07
 FilePath: /opensource-homework/src/ObtainData/OptionData.py
 '''
+# TODO: 将sleep替换为等待唤醒的wait
 import time
 from typing import List
 from selenium.webdriver.chrome.options import Options
@@ -75,8 +76,8 @@ def get_task_data(task: WebElement, course_name) -> Task:
 def obtain_data(user_data, url) -> List[Task]:
     ops = Options()
     ops.add_argument(f'user-data-dir={user_data}')
-    # ops.add_argument("--headless")
-    # ops.add_argument("--disable-gpu")
+    ops.add_argument("--headless")
+    ops.add_argument("--disable-gpu")
     web = Chrome(options=ops)
     # 展开页面
     web.get(url)
@@ -111,7 +112,7 @@ def main():
     # 登陆
     user_data = '/resource/user-data'[1:]
     url = "https://mooc2-ans.chaoxing.com/visit/interaction"
-    # login(user_data=user_data, url=url)
+    login(user_data=user_data, url=url)
 
     # 爬取数据
     data_group = obtain_data(user_data, url)
