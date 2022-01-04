@@ -3,19 +3,25 @@ Author: LinXuan
 Date: 2022-01-04 01:22:05
 Description: 执行爬取数据的逻辑
 LastEditors: LinXuan
-LastEditTime: 2022-01-04 18:38:07
+LastEditTime: 2022-01-04 23:31:16
 FilePath: /opensource-homework/src/ObtainData/OptionData.py
 '''
 # TODO: 将sleep替换为等待唤醒的wait
+import csv
+import pprint
 import time
 from typing import List
-from selenium.webdriver.chrome.options import Options
+
 from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
 from Login import login
 from Task import Task
-import pprint
-import csv
+
 delay = 2  # 切换页面后的延迟，单位s
 
 
@@ -37,6 +43,8 @@ def get_course_data(web: Chrome, course: WebElement) -> List[Task]:
     course_name = course.text       # 课程名
     # 进入子页面
     # TODO: 目前只能通过点击的操作进入课程，对于文件夹内的未显示课程无能为力。
+    # wait = WebDriverWait(web, 10)
+    # wait.until(EC.element_to_be_clickable((By.ID, course.id)))
     course.click()
     time.sleep(delay)
     web.switch_to.window(web.window_handles[1])
@@ -64,12 +72,13 @@ def get_course_data(web: Chrome, course: WebElement) -> List[Task]:
 
 def get_task_data(task: WebElement, course_name) -> Task:
     task_data = Task(course_name)
+    task_name = task.find_element_by_tag_name("a").text
     spans = task.find_elements_by_xpath("div/span")
     start = spans[0].text.split("\n")[1]
     end = spans[1].text.split("\n")[1]
     status = spans[2].text.split("\n")[1]
     score = spans[3].text
-    task_data.full(start, end, status, score)
+    task_data.full(task_name=task_name, start=start, end=end, status=status, score=score)
     return task_data
 
 
@@ -78,11 +87,15 @@ def obtain_data(user_data, url) -> List[Task]:
     ops.add_argument(f'user-data-dir={user_data}')
     ops.add_argument("--headless")
     ops.add_argument("--disable-gpu")
+    # 下面两个参数视图解决无头状态下最后一个元素不可点击的问题。
+    # 有头状态下似乎工作正常，原因暂时不明。猜测可能由于浏览器界面大小不同是展开的元素数量不同有关。
+    ops.add_argument("--window-size=1920,1080")
+    ops.add_argument("--start-maximized")
     web = Chrome(options=ops)
     # 展开页面
     web.get(url)
     time.sleep(delay)
-
+    web.implicitly_wait(4)
     # 获取课程列表
     course_list = get_course_list(web)
 
@@ -102,7 +115,7 @@ def save_to_csv(data_group: List[Task], filename):
     '''
     with open(filename, mode='w', encoding='utf-8') as f:
         csvwriter = csv.writer(f)
-        csvwriter.writerow(["start", "end", "status", "score", "name"])
+        csvwriter.writerow(["course_name", "task_name", "start", "end", "status", "score"])
         for task in data_group:
             csvwriter.writerow(task.to_data())
     pass
