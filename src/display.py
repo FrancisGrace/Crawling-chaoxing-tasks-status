@@ -15,7 +15,7 @@ from datetime import datetime
 
 def display_table():
     """
-    将未提交或可修改的作业以表格形式显示
+    将未过截止时间或已过但10天内未批改的作业以表格形式显示
     """
     # 创建表格
     table = PrettyTable(['科目', '作业名称', '截止时间', '剩余时间', '是否已提交'])
@@ -28,9 +28,10 @@ def display_table():
                 end_date = datetime.fromisoformat(row['end'])
                 now_date = datetime.now()
                 delta_date = end_date - now_date
-                delta = '{}天{}小时'.format(delta_date.days, delta_date.seconds // 3600)
-                status = '是' if row['status'] == '待批阅' else '否'
-                table.add_row([row['course_name'], row['task_name'], row['end'], delta, status])
+                if delta_date.days < 10:
+                    delta = '{}天{}小时'.format(delta_date.days, delta_date.seconds // 3600)
+                    status = '是' if row['status'] == '待批阅' else '否'
+                    table.add_row([row['course_name'], row['task_name'], row['end'], delta, status])
     print(table)
 
 
